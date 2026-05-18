@@ -28,6 +28,8 @@ http://localhost:3000
 
 ## Test API
 
+Single submission:
+
 PowerShell:
 
 ```powershell
@@ -42,6 +44,30 @@ Example response:
   "passed": 10,
   "total": 10
 }
+```
+
+Batch submissions:
+
+```powershell
+curl.exe -F "files=@student1.sb3" -F "files=@student2.sb3" -F "problem=problem1" http://localhost:3000/submit-batch
+```
+
+Example batch response:
+
+```json
+[
+  {
+    "file": "student1.sb3",
+    "verdict": "ACCEPTED",
+    "passed": 10,
+    "total": 10
+  },
+  {
+    "file": "bad.sb3",
+    "verdict": "ERROR",
+    "message": "..."
+  }
+]
 ```
 
 ## Scratch Project Format

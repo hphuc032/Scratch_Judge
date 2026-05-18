@@ -34,12 +34,29 @@ const upload = multer({
   }
 });
 
+function hasProjectJson(filePath) {
+  const buffer = fs.readFileSync(filePath);
+  const marker = Buffer.from('project.json');
+
+  return buffer.includes(marker);
+}
+
+function judgeOptions(problem) {
+  return {
+    problem: problem || 'problem1',
+    problemsRoot: PROBLEMS_DIR,
+    timeoutMs: DEFAULT_TIMEOUT_MS
+  };
+}
+
 app.get('/', (_req, res) => {
   res.json({
     service: 'Scratch Auto Judge',
     submit: 'POST /submit',
+    submitBatch: 'POST /submit-batch',
     fields: {
       file: '.sb3 file',
+      files: 'multiple .sb3 files',
       problem: 'optional, default problem1'
     }
   });
@@ -52,11 +69,7 @@ app.post('/submit', upload.single('file'), async (req, res) => {
   }
 
   try {
-    const result = await judgeSubmission(req.file.path, {
-      problem: req.body.problem || 'problem1',
-      problemsRoot: PROBLEMS_DIR,
-      timeoutMs: DEFAULT_TIMEOUT_MS
-    });
+    const result = await judgeSubmission(req.file.path, judgeOptions(req.body.problem));
 
     res.json({
       verdict: result.verdict,
@@ -71,6 +84,57 @@ app.post('/submit', upload.single('file'), async (req, res) => {
       error: error.message
     });
   }
+});
+
+app.post('/submit-batch', upload.array('files', 100), async (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    res.status(400).json([
+      {
+        file: null,
+        verdict: 'ERROR',
+        message: 'Missing .sb3 file field: files'
+      }
+    ]);
+    return;
+  }
+
+  const results = [];
+
+  for (const file of req.files) {
+    try {
+      if (!hasProjectJson(file.path)) {
+        throw new Error('Invalid .sb3 file: missing project.json');
+      }
+
+      const result = await judgeSubmission(file.path, judgeOptions(req.body.problem));
+      const erroredTestcase =
+        result.results && result.results.find((testcase) => testcase.error && testcase.error !== 'TIMEOUT');
+
+      if (erroredTestcase) {
+        results.push({
+          file: file.originalname,
+          verdict: 'ERROR',
+          message: erroredTestcase.error
+        });
+        continue;
+      }
+
+      results.push({
+        file: file.originalname,
+        verdict: result.verdict,
+        passed: result.passed,
+        total: result.total
+      });
+    } catch (error) {
+      results.push({
+        file: file.originalname,
+        verdict: 'ERROR',
+        message: error.message
+      });
+    }
+  }
+
+  res.json(results);
 });
 
 app.use((error, _req, res, _next) => {
