@@ -1,40 +1,79 @@
-# scratch-run [![Build Status](https://github.com/VNOI-Admin/scratch-run/actions/workflows/main.yml/badge.svg)](https://github.com/VNOI-Admin/scratch-run/actions/)
+# Scratch Auto Judge
 
-scratch-run is a CLI interpreter for Scratch based on [scratch-vm](https://github.com/TurboWarp/scratch-vm).
+Scratch Auto Judge is a small NodeJS + Express backend for judging Scratch `.sb3` submissions.
 
-scratch-run was created to judge solutions written in Scratch. It is used mainly in our official online judge [VNOJ](https://github.com/VNOI-Admin/OJ), but it can also be used separately.
+It uses `scratch-vm` to run Scratch projects in NodeJS, injects testcase input through normal Scratch `ask and wait` / `answer`, then reads the final result from a Scratch variable named `KQ`.
 
-scratch-run is written in Node.js and packed with [pkg](https://github.com/vercel/pkg). No dependencies are required for running.
+## Requirements
 
-## Installation
+- NodeJS LTS
 
-Prebuilt binaries are available in [Releases](https://github.com/VNOI-Admin/scratch-run/releases).
-
-## Usage
+## Install
 
 ```bash
-scratch-run [scratch file]
-```
-
-For example:
-
-```bash
-scratch-run tests/echo.sb3
-```
-
-Type in something and it will be echoed back!
-
-For more detailed instructions, see our [wiki page](https://github.com/VNOI-Admin/scratch-run/wiki).
-
-## Build Instructions
-
-You need Node.js and npm to build.
-
-```bash
-git clone https://github.com/VNOI-Admin/scratch-run.git
-cd scratch-run
 npm install
-npm run build
 ```
 
-Built binaries will be saved in `build` directory.
+## Run
+
+```bash
+npm start
+```
+
+Default server:
+
+```text
+http://localhost:3000
+```
+
+## Test API
+
+PowerShell:
+
+```powershell
+curl.exe -F "file=@sample.sb3" -F "problem=problem1" http://localhost:3000/submit
+```
+
+Example response:
+
+```json
+{
+  "verdict": "ACCEPTED",
+  "passed": 10,
+  "total": 10
+}
+```
+
+## Scratch Project Format
+
+Students create a normal Scratch project and export it as `.sb3`.
+
+The project should:
+
+1. Use `ask and wait` to read input.
+2. Use `answer` to get the current input value.
+3. Store the final answer in a variable named exactly `KQ`.
+
+The judge returns the next line from `inputXX.txt` for each `ask and wait`.
+
+## Testcase Format
+
+Problems are stored in `problems/`.
+
+```text
+problems/
+  problem1/
+    input01.txt
+    output01.txt
+    input02.txt
+    output02.txt
+```
+
+Each `inputXX.txt` must have a matching `outputXX.txt`.
+
+Possible verdicts:
+
+```text
+ACCEPTED
+WRONG ANSWER
+```
