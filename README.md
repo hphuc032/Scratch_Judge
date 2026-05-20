@@ -51,6 +51,29 @@ Batch submissions:
 ```powershell
 curl.exe -F "files=@student1.sb3" -F "files=@student2.sb3" -F "problem=problem1" http://localhost:3000/submit-batch
 ```
+### Batch submissions from a folder
+
+If you have many `.sb3` files in one folder, you do not need to type each file name manually.
+
+Example:
+
+```text
+Scratch_Judge/
+  submissions_batch/
+    student1.sb3
+    student2.sb3
+    student3.sb3
+```
+```powershell
+cd .\submissions_batch
+
+```powershell
+$files = Get-ChildItem -Filter *.sb3 | ForEach-Object { "-F `"files=@$($_.FullName)`"" }
+
+$cmd = "curl.exe " + ($files -join " ") + " -F `"problem=problem1`" http://localhost:3000/submit-batch"
+
+Invoke-Expression $cmd
+```
 
 Example batch response:
 
