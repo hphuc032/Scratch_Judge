@@ -35,6 +35,31 @@ function countProblemTests(problem) {
     .length;
 }
 
+function normalizeSubmissionName(fileName) {
+  const ext = path.extname(fileName).toLowerCase();
+  const baseName = path.basename(fileName, path.extname(fileName));
+  const normalizedBaseName = baseName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  return `${normalizedBaseName}${ext}`;
+}
+
+function findSubmissionFile(studentDir, expectedFile) {
+  const expectedName = normalizeSubmissionName(expectedFile);
+  const entries = fs.readdirSync(studentDir, { withFileTypes: true });
+
+  const match = entries.find(
+    (entry) => entry.isFile() && normalizeSubmissionName(entry.name) === expectedName
+  );
+
+  return match ? path.join(studentDir, match.name) : null;
+}
+
 function listStudentDirs(rootDir) {
   return fs
     .readdirSync(rootDir, { withFileTypes: true })
@@ -174,10 +199,10 @@ async function main() {
 
   for (const student of students) {
     for (const task of TASKS) {
-      const submissionPath = path.join(student.dir, task.file);
+      const submissionPath = findSubmissionFile(student.dir, task.file);
       const expectedTotal = countProblemTests(task.problem);
 
-      if (!fs.existsSync(submissionPath)) {
+      if (!submissionPath) {
         rows.push({
           student: student.name,
           file: task.file,
