@@ -26,6 +26,49 @@ Default server:
 http://localhost:3000
 ```
 
+## Grade A Folder Of Students
+
+Start the judge server first:
+
+```bash
+npm start
+```
+
+Then run the folder grading script in another terminal:
+
+```powershell
+node batch-grade-folder.js "D:\SUBMISSIONS"
+```
+
+Expected folder layout:
+
+```text
+D:\SUBMISSIONS\
+  Nguyen Van A\
+    bai1.sb3
+    bai2.sb3
+    bai3.sb3
+    bai4.sb3
+  Tran Thi B\
+    bai1.sb3
+    bai3.sb3
+```
+
+The script maps files to problems like this:
+
+```text
+bai1.sb3 -> problem1
+bai2.sb3 -> problem2
+bai3.sb3 -> problem3
+bai4.sb3 -> problem4
+```
+
+It writes `results.csv` with these columns:
+
+```text
+student,file,problem,verdict,passed,total,score,message
+```
+
 ## Test API
 
 Single submission:
@@ -50,29 +93,6 @@ Batch submissions:
 
 ```powershell
 curl.exe -F "files=@student1.sb3" -F "files=@student2.sb3" -F "problem=problem1" http://localhost:3000/submit-batch
-```
-### Batch submissions from a folder
-
-If you have many `.sb3` files in one folder, you do not need to type each file name manually.
-
-Example:
-
-```text
-Scratch_Judge/
-  submissions_batch/
-    student1.sb3
-    student2.sb3
-    student3.sb3
-```
-```powershell
-cd .\submissions_batch
-
-```powershell
-$files = Get-ChildItem -Filter *.sb3 | ForEach-Object { "-F `"files=@$($_.FullName)`"" }
-
-$cmd = "curl.exe " + ($files -join " ") + " -F `"problem=problem1`" http://localhost:3000/submit-batch"
-
-Invoke-Expression $cmd
 ```
 
 Example batch response:

@@ -5,3 +5,4 @@ submissions/*
 temp/
 logs/
 *.log
+results.csv
